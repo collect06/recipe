@@ -1,0 +1,1749 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTubeレシピストック</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #2563eb;
+      --accent-2: #0f766e;
+      --danger: #dc2626;
+      --shadow: 0 10px 30px rgba(31, 41, 55, 0.08);
+      --chip: #eef2ff;
+      --good: #15803d;
+      --warn: #b45309;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif; }
+    a { color: inherit; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .header, .panel {
+      background: rgba(255,255,255,0.94);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .titleBlock h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2vw, 2rem);
+      line-height: 1.2;
+    }
+
+    .titleBlock p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .headerActions, .toolbar, .detailActions, .formActions, .settingsActions, .inlineActions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 14px;
+      padding: 11px 14px;
+      min-height: 44px;
+      font-weight: 700;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(31,41,55,.08); }
+    .btn:active { transform: translateY(0); box-shadow: none; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .btn.secondary { background: var(--accent-2); border-color: var(--accent-2); color: white; }
+    .btn.danger { background: #fff1f2; border-color: #fecdd3; color: var(--danger); }
+    .btn.ghost { background: transparent; }
+    .btn.small { min-height: 38px; padding: 9px 12px; border-radius: 12px; font-weight: 700; }
+    .btn.icon { padding-inline: 12px; }
+
+    .notice {
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+    .notice.info { border-color: #bfdbfe; background: #eff6ff; }
+    .notice.success { border-color: #bbf7d0; background: #f0fdf4; }
+    .notice.warn { border-color: #fde68a; background: #fffbeb; }
+    .notice.error { border-color: #fecaca; background: #fef2f2; }
+
+    .panel {
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 180px 180px auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toolbar .field,
+    .editor .field,
+    .settings .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .toolbar label,
+    .editor label,
+    .settings label {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .toolbar input, .toolbar select,
+    .editor input, .editor select, .editor textarea,
+    .settings input, .settings textarea, .settings select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 11px 12px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    .toolbar input:focus, .toolbar select:focus,
+    .editor input:focus, .editor textarea:focus,
+    .settings input:focus, .settings textarea:focus, .settings select:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+    }
+
+    .listStats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      border-radius: 999px;
+      background: var(--chip);
+      color: #3730a3;
+      padding: 7px 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.96);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .recipeCard {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100%;
+    }
+
+    .thumb {
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb .placeholder {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 2rem;
+      color: #1d4ed8;
+      font-weight: 900;
+      letter-spacing: .05em;
+    }
+
+    .recipeBody {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .recipeTop {
+      display: grid;
+      gap: 6px;
+    }
+
+    .recipeTitleRow {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .recipeTitle {
+      margin: 0;
+      font-size: 1.08rem;
+      line-height: 1.4;
+    }
+
+    .metaRow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .tagList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #374151;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .recipeActions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .emptyState {
+      text-align: center;
+      padding: 30px 16px;
+      color: var(--muted);
+      display: grid;
+      gap: 14px;
+      place-items: center;
+    }
+
+    .detailLayout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 14px;
+    }
+
+    .detailHero {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detailTitleRow {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .detailTitle {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.2vw, 2rem);
+      line-height: 1.35;
+    }
+
+    .videoBox {
+      background: #0f172a;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid #111827;
+      min-height: 240px;
+      position: relative;
+    }
+
+    .videoBox iframe {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 0;
+      display: block;
+      background: #000;
+    }
+
+    .videoFallback {
+      display: grid;
+      place-items: center;
+      min-height: 240px;
+      color: #dbeafe;
+      text-align: center;
+      padding: 18px;
+      gap: 10px;
+    }
+
+    .videoFallback small {
+      color: #bfdbfe;
+    }
+
+    .detailMeta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .detailColumns {
+      display: grid;
+      gap: 14px;
+    }
+
+    .section {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .section h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .ingredientList, .stepList {
+      display: grid;
+      gap: 8px;
+    }
+
+    .ingredientItem, .stepItem {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border: 1px solid #eef2f7;
+      background: #fafafa;
+    }
+
+    .ingredientItem label, .stepItem .stepText {
+      line-height: 1.5;
+    }
+
+    .ingredientItem input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      flex: 0 0 auto;
+    }
+
+    .stepTimeBtn {
+      border: 1px solid #c7d2fe;
+      background: #eef2ff;
+      color: #3730a3;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-weight: 800;
+      min-height: 34px;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .stepContent {
+      display: grid;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .detailFooter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .editor {
+      display: grid;
+      gap: 14px;
+    }
+
+    .editorGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .editorGrid .full {
+      grid-column: 1 / -1;
+    }
+
+    .nestedList {
+      display: grid;
+      gap: 10px;
+    }
+
+    .rowCard {
+      padding: 12px;
+      border: 1px solid #eef2f7;
+      background: #fafafa;
+      border-radius: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .rowHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .rowGrid2 {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 10px;
+    }
+
+    .rowGrid3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .tiny {
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .previewBox {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+    }
+
+    .previewThumb {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #dbeafe;
+      display: grid;
+      place-items: center;
+      color: #1d4ed8;
+      font-weight: 900;
+    }
+
+    .previewThumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .settings {
+      display: grid;
+      gap: 14px;
+    }
+
+    .settingsGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .settingsTextArea {
+      min-height: 180px;
+      resize: vertical;
+    }
+
+    .countBox {
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+
+    .badgeLine {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hidden { display: none !important; }
+
+    .desktopOnly { display: block; }
+
+    .cooking-mode .detailMeta,
+    .cooking-mode .detailNotes,
+    .cooking-mode .detailFooter,
+    .cooking-mode .settingsHint {
+      display: none !important;
+    }
+
+    .cooking-mode .videoBox {
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06);
+    }
+
+    @media (max-width: 1050px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .detailLayout { grid-template-columns: 1fr; }
+      .toolbar { grid-template-columns: 1fr 1fr 1fr auto; }
+    }
+
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+      .toolbar { grid-template-columns: 1fr; }
+      .editorGrid, .settingsGrid, .rowGrid2 { grid-template-columns: 1fr; }
+      .rowGrid3 { grid-template-columns: 1fr; }
+      .header { padding: 14px; }
+      .panel { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app"></div>
+
+  <script>
+  (() => {
+    const STORAGE_KEY = "youtube-recipe-stock-v1";
+
+    const state = {
+      recipes: [],
+      view: "list", // list | detail | edit | settings
+      selectedId: null,
+      query: "",
+      tagFilter: "all",
+      favoriteFilter: "all",
+      cookingMode: false,
+      notice: null,
+      noticeType: "info",
+      editor: null,
+      importMode: "replace",
+      importText: ""
+    };
+
+    const app = document.getElementById("app");
+
+    function uid() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function esc(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function splitTags(input) {
+      return String(input || "")
+        .split(/[,、\n]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    function normalizeIngredients(items) {
+      if (!Array.isArray(items)) return [];
+      return items
+        .map((item) => ({
+          name: String(item?.name ?? "").trim(),
+          amount: String(item?.amount ?? "").trim(),
+          checked: Boolean(item?.checked)
+        }))
+        .filter((item) => item.name || item.amount);
+    }
+
+    function normalizeSteps(items) {
+      if (!Array.isArray(items)) return [];
+      return items
+        .map((item) => ({
+          text: String(item?.text ?? "").trim(),
+          time: String(item?.time ?? "").trim()
+        }))
+        .filter((item) => item.text || item.time);
+    }
+
+    function normalizeRecipe(raw) {
+      const createdAt = raw?.createdAt || nowIso();
+      const updatedAt = raw?.updatedAt || createdAt;
+      const youtubeUrl = String(raw?.youtubeUrl ?? "").trim();
+      return {
+        id: String(raw?.id || uid()),
+        title: String(raw?.title ?? "").trim(),
+        youtubeUrl,
+        videoId: String(raw?.videoId ?? "") || extractVideoId(youtubeUrl),
+        tags: Array.isArray(raw?.tags) ? raw.tags.map((t) => String(t).trim()).filter(Boolean) : splitTags(raw?.tags),
+        duration: String(raw?.duration ?? "").trim(),
+        ingredients: normalizeIngredients(raw?.ingredients),
+        steps: normalizeSteps(raw?.steps),
+        notes: String(raw?.notes ?? "").trim(),
+        favorite: Boolean(raw?.favorite),
+        cookCount: Number(raw?.cookCount) || 0,
+        lastCookedAt: raw?.lastCookedAt || null,
+        createdAt,
+        updatedAt
+      };
+    }
+
+    function normalizeImportedData(data) {
+      let list = [];
+      if (Array.isArray(data)) list = data;
+      else if (data && Array.isArray(data.recipes)) list = data.recipes;
+      else throw new Error("JSONの形式が正しくありません。");
+      return list.map(normalizeRecipe).filter((r) => r.title && r.youtubeUrl);
+    }
+
+    function saveRecipes() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.recipes));
+    }
+
+    function loadRecipes() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          state.recipes = [];
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        state.recipes = Array.isArray(parsed) ? parsed.map(normalizeRecipe).filter((r) => r.title && r.youtubeUrl) : [];
+      } catch {
+        state.recipes = [];
+      }
+    }
+
+    function setNotice(message, type = "info") {
+      state.notice = message;
+      state.noticeType = type;
+      render();
+      window.clearTimeout(setNotice._timer);
+      setNotice._timer = window.setTimeout(() => {
+        state.notice = null;
+        render();
+      }, 3200);
+    }
+
+    function formatDate(iso) {
+      if (!iso) return "未記録";
+      try {
+        return new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+      } catch {
+        return String(iso);
+      }
+    }
+
+    function formatDateTime(iso) {
+      if (!iso) return "未記録";
+      try {
+        return new Intl.DateTimeFormat("ja-JP", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        }).format(new Date(iso));
+      } catch {
+        return String(iso);
+      }
+    }
+
+    function formatSeconds(sec) {
+      const s = Math.max(0, Math.floor(Number(sec) || 0));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const r = s % 60;
+      if (h > 0) {
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+      }
+      return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+    }
+
+    function parseTimeToSeconds(value) {
+      const text = String(value || "").trim();
+      if (!text) return 0;
+      if (/^\d+$/.test(text)) return Number(text);
+      const parts = text.split(":").map((n) => Number(n));
+      if (parts.some((n) => Number.isNaN(n))) return 0;
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      return 0;
+    }
+
+    function extractVideoId(url) {
+      const input = String(url || "").trim();
+      if (!input) return "";
+      try {
+        const parsed = new URL(input);
+        const host = parsed.hostname.replace(/^www\./, "");
+        const path = parsed.pathname.replace(/\/+$/, "");
+        if (host === "youtu.be") {
+          return path.split("/").filter(Boolean)[0] || "";
+        }
+        if (host.endsWith("youtube.com")) {
+          if (path === "/watch") return parsed.searchParams.get("v") || "";
+          const match = path.match(/^\/(embed|shorts|live|v)\/([^/?]+)/);
+          if (match) return match[2] || "";
+        }
+      } catch {
+        // fall through
+      }
+      const patterns = [
+        /(?:youtu\.be\/)([A-Za-z0-9_-]{6,})/,
+        /(?:v=)([A-Za-z0-9_-]{6,})/,
+        /(?:embed\/)([A-Za-z0-9_-]{6,})/,
+        /(?:shorts\/)([A-Za-z0-9_-]{6,})/,
+        /(?:live\/)([A-Za-z0-9_-]{6,})/
+      ];
+      for (const pattern of patterns) {
+        const match = input.match(pattern);
+        if (match) return match[1];
+      }
+      return "";
+    }
+
+    function youtubeEmbedUrl(videoId, startSeconds = 0) {
+      if (!videoId) return "";
+      const start = Math.max(0, Math.floor(Number(startSeconds) || 0));
+      const params = new URLSearchParams({
+        start: String(start),
+        autoplay: "1",
+        playsinline: "1",
+        rel: "0",
+        modestbranding: "1"
+      });
+      return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
+    }
+
+    function youtubeWatchUrl(videoId, startSeconds = 0) {
+      const start = Math.max(0, Math.floor(Number(startSeconds) || 0));
+      const params = new URLSearchParams();
+      if (start > 0) params.set("t", `${start}s`);
+      return `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}${params.toString() ? `&${params.toString()}` : ""}`;
+    }
+
+    function getRecipeById(id) {
+      return state.recipes.find((r) => r.id === id) || null;
+    }
+
+    function getFilteredRecipes() {
+      const q = state.query.trim().toLowerCase();
+      return state.recipes
+        .slice()
+        .filter((recipe) => {
+          if (state.favoriteFilter === "favorite" && !recipe.favorite) return false;
+          if (state.favoriteFilter === "normal" && recipe.favorite) return false;
+          if (state.tagFilter !== "all" && !recipe.tags.includes(state.tagFilter)) return false;
+          if (!q) return true;
+          const haystack = [
+            recipe.title,
+            recipe.tags.join(" "),
+            recipe.duration,
+            recipe.notes,
+            recipe.ingredients.map((i) => `${i.amount} ${i.name}`).join(" "),
+            recipe.steps.map((s) => s.text).join(" ")
+          ]
+            .join(" ")
+            .toLowerCase();
+          return haystack.includes(q);
+        })
+        .sort((a, b) => {
+          if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
+          const at = new Date(a.updatedAt || a.createdAt).getTime();
+          const bt = new Date(b.updatedAt || b.createdAt).getTime();
+          return bt - at;
+        });
+    }
+
+    function allTags() {
+      return [...new Set(state.recipes.flatMap((r) => r.tags))].sort((a, b) => a.localeCompare(b, "ja"));
+    }
+
+    function openList() {
+      state.view = "list";
+      state.selectedId = null;
+      state.cookingMode = false;
+      render();
+    }
+
+    function openSettings() {
+      state.view = "settings";
+      state.cookingMode = false;
+      render();
+    }
+
+    function openDetail(id) {
+      state.selectedId = id;
+      state.view = "detail";
+      state.cookingMode = false;
+      render();
+    }
+
+    function openEditor(recipe = null) {
+      const source = recipe ? normalizeRecipe(recipe) : null;
+      state.editor = source ? {
+        id: source.id,
+        title: source.title,
+        youtubeUrl: source.youtubeUrl,
+        videoId: source.videoId,
+        tagsText: source.tags.join(", "),
+        duration: source.duration,
+        ingredients: source.ingredients.length ? source.ingredients.map((i) => ({ name: i.name, amount: i.amount })) : [{ name: "", amount: "" }],
+        steps: source.steps.length ? source.steps.map((s) => ({ text: s.text, time: s.time })) : [{ text: "", time: "" }],
+        notes: source.notes,
+        favorite: source.favorite
+      } : {
+        id: null,
+        title: "",
+        youtubeUrl: "",
+        videoId: "",
+        tagsText: "",
+        duration: "",
+        ingredients: [{ name: "", amount: "" }],
+        steps: [{ text: "", time: "" }],
+        notes: "",
+        favorite: false
+      };
+      state.view = "edit";
+      render();
+    }
+
+    function collectEditorRecipe() {
+      const e = state.editor;
+      const title = String(e?.title ?? "").trim();
+      const youtubeUrl = String(e?.youtubeUrl ?? "").trim();
+      if (!title || !youtubeUrl) {
+        throw new Error("レシピ名とYouTube URLは必須です。");
+      }
+
+      const ingredients = (e.ingredients || [])
+        .map((row) => ({ name: String(row.name ?? "").trim(), amount: String(row.amount ?? "").trim() }))
+        .filter((row) => row.name || row.amount)
+        .map((row) => ({ ...row, checked: false }));
+
+      const steps = (e.steps || [])
+        .map((row) => ({ text: String(row.text ?? "").trim(), time: String(row.time ?? "").trim() }))
+        .filter((row) => row.text || row.time);
+
+      const videoId = extractVideoId(youtubeUrl);
+      if (!videoId) {
+        throw new Error("YouTube URL から videoId を抽出できませんでした。");
+      }
+
+      const existing = e.id ? getRecipeById(e.id) : null;
+      const createdAt = existing?.createdAt || nowIso();
+      const updatedAt = nowIso();
+
+      return {
+        id: existing?.id || uid(),
+        title,
+        youtubeUrl,
+        videoId,
+        tags: splitTags(e.tagsText),
+        duration: String(e.duration ?? "").trim(),
+        ingredients,
+        steps,
+        notes: String(e.notes ?? "").trim(),
+        favorite: Boolean(e.favorite),
+        cookCount: existing?.cookCount || 0,
+        lastCookedAt: existing?.lastCookedAt || null,
+        createdAt,
+        updatedAt
+      };
+    }
+
+    function saveEditor() {
+      try {
+        const recipe = collectEditorRecipe();
+        const idx = state.recipes.findIndex((r) => r.id === recipe.id);
+        if (idx >= 0) state.recipes[idx] = recipe;
+        else state.recipes.unshift(recipe);
+        saveRecipes();
+        state.selectedId = recipe.id;
+        state.view = "detail";
+        state.editor = null;
+        setNotice("レシピを保存しました。", "success");
+        render();
+      } catch (err) {
+        setNotice(err.message || "保存できませんでした。", "error");
+      }
+    }
+
+    function deleteRecipe(id) {
+      const recipe = getRecipeById(id);
+      if (!recipe) return;
+      if (!confirm(`「${recipe.title}」を削除しますか？`)) return;
+      state.recipes = state.recipes.filter((r) => r.id !== id);
+      saveRecipes();
+      state.view = "list";
+      state.selectedId = null;
+      setNotice("レシピを削除しました。", "success");
+      render();
+    }
+
+    function toggleFavorite(id) {
+      const recipe = getRecipeById(id);
+      if (!recipe) return;
+      recipe.favorite = !recipe.favorite;
+      recipe.updatedAt = nowIso();
+      saveRecipes();
+      render();
+    }
+
+    function markCooked(id) {
+      const recipe = getRecipeById(id);
+      if (!recipe) return;
+      recipe.cookCount = (Number(recipe.cookCount) || 0) + 1;
+      recipe.lastCookedAt = nowIso();
+      recipe.updatedAt = nowIso();
+      saveRecipes();
+      setNotice("作った記録を保存しました。", "success");
+      render();
+    }
+
+    function clearAllIngredients(recipeId) {
+      const recipe = getRecipeById(recipeId);
+      if (!recipe) return;
+      recipe.ingredients = recipe.ingredients.map((item) => ({ ...item, checked: false }));
+      recipe.updatedAt = nowIso();
+      saveRecipes();
+      setNotice("材料チェックを全解除しました。", "success");
+      render();
+    }
+
+    function startAt(recipe, seconds) {
+      if (!recipe?.videoId) return;
+      const time = Math.max(0, Math.floor(Number(seconds) || 0));
+      state.selectedId = recipe.id;
+      recipe._playerStart = time;
+      saveRecipes(); // harmless; keeps data if array mutated elsewhere
+      render();
+      const box = document.getElementById("videoAnchor");
+      if (box) box.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function openYouTube(recipe, seconds = 0) {
+      if (!recipe?.videoId) return;
+      window.open(youtubeWatchUrl(recipe.videoId, seconds), "_blank", "noopener,noreferrer");
+    }
+
+    function setImportMode(mode) {
+      state.importMode = mode;
+      render();
+    }
+
+    function exportJson() {
+      const payload = JSON.stringify(state.recipes, null, 2);
+      const blob = new Blob([payload], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `youtube-recipe-stock-${stamp}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setNotice("JSONを書き出しました。", "success");
+    }
+
+    function applyImportedRecipes(recipes, mode) {
+      if (mode === "replace") {
+        state.recipes = recipes.map((r) => ({ ...r, id: r.id || uid() }));
+      } else {
+        const existingIds = new Set(state.recipes.map((r) => r.id));
+        const incoming = recipes.map((r) => {
+          const next = { ...r };
+          if (!next.id || existingIds.has(next.id)) next.id = uid();
+          existingIds.add(next.id);
+          return next;
+        });
+        state.recipes = [...incoming, ...state.recipes];
+      }
+      saveRecipes();
+      state.view = "list";
+      state.selectedId = null;
+      setNotice("JSONを取り込みました。", "success");
+      render();
+    }
+
+    function importFromText() {
+      try {
+        const text = state.importText.trim();
+        if (!text) throw new Error("JSONを貼り付けてください。");
+        const parsed = JSON.parse(text);
+        const recipes = normalizeImportedData(parsed);
+        applyImportedRecipes(recipes, state.importMode);
+      } catch (err) {
+        setNotice(err.message || "JSONの取り込みに失敗しました。", "error");
+      }
+    }
+
+    function clearAllData() {
+      if (!confirm("すべてのレシピを削除しますか？")) return;
+      state.recipes = [];
+      saveRecipes();
+      state.view = "list";
+      state.selectedId = null;
+      setNotice("すべて削除しました。", "warn");
+      render();
+    }
+
+    function onAppClick(event) {
+      const el = event.target.closest("[data-action]");
+      if (!el) return;
+      const action = el.dataset.action;
+      const id = el.dataset.id;
+      const index = el.dataset.index;
+
+      if (action === "open-list") return openList();
+      if (action === "open-settings") return openSettings();
+      if (action === "new-recipe") return openEditor();
+      if (action === "open-detail") return openDetail(id);
+      if (action === "edit-recipe") {
+        const recipe = getRecipeById(id);
+        if (recipe) openEditor(recipe);
+        return;
+      }
+      if (action === "delete-recipe") return deleteRecipe(id);
+      if (action === "toggle-favorite") return toggleFavorite(id);
+      if (action === "mark-cooked") return markCooked(id);
+      if (action === "clear-ingredients") return clearAllIngredients(id);
+      if (action === "toggle-cooking-mode") {
+        state.cookingMode = !state.cookingMode;
+        render();
+        return;
+      }
+      if (action === "open-youtube") {
+        const recipe = getRecipeById(id);
+        if (recipe) openYouTube(recipe, Number(el.dataset.start || 0));
+        return;
+      }
+      if (action === "seek-step") {
+        const recipe = getRecipeById(id);
+        if (!recipe) return;
+        const sec = parseTimeToSeconds(el.dataset.time || "");
+        if (sec <= 0) {
+          setNotice("この手順にはタイムスタンプがありません。", "warn");
+          return;
+        }
+        startAt(recipe, sec);
+        return;
+      }
+      if (action === "add-ingredient") {
+        state.editor.ingredients.push({ name: "", amount: "" });
+        render();
+        return;
+      }
+      if (action === "add-step") {
+        state.editor.steps.push({ text: "", time: "" });
+        render();
+        return;
+      }
+      if (action === "remove-ingredient") {
+        const idx = Number(index);
+        state.editor.ingredients.splice(idx, 1);
+        if (!state.editor.ingredients.length) state.editor.ingredients.push({ name: "", amount: "" });
+        render();
+        return;
+      }
+      if (action === "remove-step") {
+        const idx = Number(index);
+        state.editor.steps.splice(idx, 1);
+        if (!state.editor.steps.length) state.editor.steps.push({ text: "", time: "" });
+        render();
+        return;
+      }
+      if (action === "save-editor") return saveEditor();
+      if (action === "cancel-editor") return openList();
+      if (action === "export-json") return exportJson();
+      if (action === "clear-all") return clearAllData();
+      if (action === "import-text") return importFromText();
+      if (action === "sample-data") {
+        const sample = [
+          {
+            title: "鶏むね肉の簡単焼き",
+            youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            tags: ["鶏肉", "時短"],
+            duration: "15分",
+            ingredients: [{ name: "鶏むね肉", amount: "1枚" }, { name: "塩", amount: "少々" }],
+            steps: [{ text: "下味をつける", time: "00:12" }, { text: "焼く", time: "01:05" }],
+            notes: "動画の1分台から見始めると楽。",
+            favorite: true
+          },
+          {
+            title: "豆腐ハンバーグ",
+            youtubeUrl: "https://youtu.be/dQw4w9WgXcQ",
+            tags: ["豆腐", "節約"],
+            duration: "25分",
+            ingredients: [{ name: "豆腐", amount: "1丁" }, { name: "ひき肉", amount: "200g" }],
+            steps: [{ text: "豆腐の水気を切る", time: "00:40" }, { text: "焼く", time: "02:10" }],
+            notes: "",
+            favorite: false
+          }
+        ].map(normalizeRecipe);
+        state.recipes = [...sample, ...state.recipes];
+        saveRecipes();
+        setNotice("サンプルを追加しました。", "success");
+        render();
+        return;
+      }
+    }
+
+    function onAppInput(event) {
+      const target = event.target;
+      if (!target) return;
+
+      if (target.matches("[data-field='search']")) {
+        state.query = target.value;
+        render();
+        return;
+      }
+      if (target.matches("[data-field='tagFilter']")) {
+        state.tagFilter = target.value;
+        render();
+        return;
+      }
+      if (target.matches("[data-field='favoriteFilter']")) {
+        state.favoriteFilter = target.value;
+        render();
+        return;
+      }
+
+      if (state.view !== "edit" || !state.editor) return;
+
+      if (target.matches("[data-editor-field]")) {
+        const field = target.dataset.editorField;
+        if (field === "title") state.editor.title = target.value;
+        if (field === "youtubeUrl") {
+          state.editor.youtubeUrl = target.value;
+          state.editor.videoId = extractVideoId(target.value);
+          refreshEditorPreview();
+        }
+        if (field === "tagsText") state.editor.tagsText = target.value;
+        if (field === "duration") state.editor.duration = target.value;
+        if (field === "notes") state.editor.notes = target.value;
+        if (field === "favorite") state.editor.favorite = target.checked;
+        return;
+      }
+
+      if (target.matches("[data-ingredient-name]")) {
+        const idx = Number(target.dataset.index);
+        state.editor.ingredients[idx].name = target.value;
+        return;
+      }
+      if (target.matches("[data-ingredient-amount]")) {
+        const idx = Number(target.dataset.index);
+        state.editor.ingredients[idx].amount = target.value;
+        return;
+      }
+      if (target.matches("[data-step-text]")) {
+        const idx = Number(target.dataset.index);
+        state.editor.steps[idx].text = target.value;
+        return;
+      }
+      if (target.matches("[data-step-time]")) {
+        const idx = Number(target.dataset.index);
+        state.editor.steps[idx].time = target.value;
+        return;
+      }
+    }
+
+    function onAppChange(event) {
+      const target = event.target;
+      if (!target) return;
+
+      if (target.matches("[data-field='importMode']")) {
+        setImportMode(target.value);
+        return;
+      }
+
+      if (target.matches("[data-field='importFile']")) {
+        const file = target.files && target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(String(reader.result || ""));
+            const recipes = normalizeImportedData(parsed);
+            applyImportedRecipes(recipes, state.importMode);
+          } catch (err) {
+            setNotice(err.message || "ファイルの取り込みに失敗しました。", "error");
+          }
+        };
+        reader.readAsText(file, "utf-8");
+        target.value = "";
+        return;
+      }
+
+      if (target.matches("[data-ingredient-toggle]")) {
+        const recipe = getRecipeById(target.dataset.id);
+        if (!recipe) return;
+        const idx = Number(target.dataset.index);
+        if (!recipe.ingredients[idx]) return;
+        recipe.ingredients[idx].checked = target.checked;
+        recipe.updatedAt = nowIso();
+        saveRecipes();
+        return;
+      }
+    }
+
+    function refreshEditorPreview() {
+      const preview = document.getElementById("editorPreview");
+      if (!preview || !state.editor) return;
+      const videoId = state.editor.videoId || extractVideoId(state.editor.youtubeUrl);
+      const html = videoId
+        ? `
+          <div class="previewThumb">
+            <img src="https://img.youtube.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg" alt="YouTubeサムネイル" onerror="this.remove();" />
+          </div>
+          <div class="tiny">videoId: <strong>${esc(videoId)}</strong></div>
+        `
+        : `
+          <div class="previewThumb">YouTube URL を入力するとプレビューが出ます</div>
+          <div class="tiny">一般的な watch / youtu.be / shorts / embed の URL に対応しています。</div>
+        `;
+      preview.innerHTML = html;
+    }
+
+    function renderHeader() {
+      return `
+        <header class="header">
+          <div class="titleBlock">
+            <h1>YouTubeレシピストック</h1>
+            <p>YouTubeで見つけたレシピを、料理中に見やすいカードにして並べるアプリです。</p>
+          </div>
+          <div class="headerActions">
+            <button class="btn icon" data-action="open-settings" type="button">設定 / 管理</button>
+            <button class="btn primary" data-action="new-recipe" type="button">＋ レシピ追加</button>
+          </div>
+        </header>
+      `;
+    }
+
+    function renderNotice() {
+      if (!state.notice) return "";
+      return `<div class="notice ${esc(state.noticeType)}" role="status" aria-live="polite">${esc(state.notice)}</div>`;
+    }
+
+    function renderListView() {
+      const recipes = getFilteredRecipes();
+      const tags = allTags();
+      const countText = `${recipes.length}件 / 全${state.recipes.length}件`;
+      return `
+        ${renderNotice()}
+        <section class="panel">
+          <div class="toolbar" aria-label="検索と絞り込み">
+            <div class="field">
+              <label for="search">検索</label>
+              <input id="search" data-field="search" type="search" value="${esc(state.query)}" placeholder="レシピ名、材料、メモを検索" />
+            </div>
+            <div class="field">
+              <label for="tagFilter">タグ</label>
+              <select id="tagFilter" data-field="tagFilter">
+                <option value="all" ${state.tagFilter === "all" ? "selected" : ""}>すべて</option>
+                ${tags.map((tag) => `<option value="${esc(tag)}" ${state.tagFilter === tag ? "selected" : ""}>${esc(tag)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label for="favoriteFilter">お気に入り</label>
+              <select id="favoriteFilter" data-field="favoriteFilter">
+                <option value="all" ${state.favoriteFilter === "all" ? "selected" : ""}>すべて</option>
+                <option value="favorite" ${state.favoriteFilter === "favorite" ? "selected" : ""}>お気に入りのみ</option>
+                <option value="normal" ${state.favoriteFilter === "normal" ? "selected" : ""}>お気に入り以外</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn secondary" data-action="sample-data" type="button">サンプル追加</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="listStats">
+          <div class="pill">表示中: ${esc(countText)}</div>
+          <div class="badgeLine">
+            <span class="pill">保存先: localStorage</span>
+            <span class="pill">外部APIなし</span>
+            <span class="pill">YouTube URL 手入力</span>
+          </div>
+        </section>
+
+        ${recipes.length ? `
+          <section class="grid" aria-label="レシピ一覧">
+            ${recipes.map(renderRecipeCard).join("")}
+          </section>
+        ` : `
+          <section class="card emptyState">
+            <div style="font-size:3rem;">🍳</div>
+            <div>
+              <h2 style="margin:0 0 8px;">まだレシピがありません</h2>
+              <div>まずは YouTube のレシピ URL を1件だけ登録してみてください。</div>
+            </div>
+            <div class="inlineActions">
+              <button class="btn primary" data-action="new-recipe" type="button">最初のレシピを追加</button>
+            </div>
+          </section>
+        `}
+      `;
+    }
+
+    function renderRecipeCard(recipe) {
+      const thumb = recipe.videoId
+        ? `<img src="https://img.youtube.com/vi/${encodeURIComponent(recipe.videoId)}/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />`
+        : "";
+      const title = esc(recipe.title);
+      const tags = recipe.tags.length ? recipe.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("") : `<span class="muted">タグなし</span>`;
+      const duration = recipe.duration ? esc(recipe.duration) : "未設定";
+      const cooked = recipe.lastCookedAt ? formatDate(recipe.lastCookedAt) : "まだ作っていない";
+      return `
+        <article class="card recipeCard">
+          <div class="thumb">
+            ${thumb}
+            <div class="placeholder" style="${recipe.videoId ? "display:none;" : ""}">No preview</div>
+          </div>
+          <div class="recipeBody">
+            <div class="recipeTop">
+              <div class="recipeTitleRow">
+                <h3 class="recipeTitle">${title}</h3>
+                <button class="btn small icon" data-action="toggle-favorite" data-id="${esc(recipe.id)}" type="button" aria-label="お気に入り切り替え">${recipe.favorite ? "★" : "☆"}</button>
+              </div>
+              <div class="tagList">${tags}</div>
+              <div class="metaRow">
+                <span>所要時間: ${duration}</span>
+                <span>最終調理日: ${cooked}</span>
+              </div>
+            </div>
+            <div class="recipeActions">
+              <button class="btn small primary" data-action="open-detail" data-id="${esc(recipe.id)}" type="button">見る</button>
+              <button class="btn small" data-action="edit-recipe" data-id="${esc(recipe.id)}" type="button">編集</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderDetailView(recipe) {
+      if (!recipe) {
+        return `
+          ${renderNotice()}
+          <section class="panel emptyState">
+            <h2>レシピが見つかりません</h2>
+            <button class="btn primary" data-action="open-list" type="button">一覧へ戻る</button>
+          </section>
+        `;
+      }
+
+      const embedSrc = recipe.videoId ? youtubeEmbedUrl(recipe.videoId, recipe._playerStart || 0) : "";
+      const videoSection = recipe.videoId ? `
+        <iframe
+          src="${esc(embedSrc)}"
+          title="${esc(recipe.title)}"
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+      ` : `
+        <div class="videoFallback">
+          <div style="font-size:2rem;">▶</div>
+          <div>YouTube URL から videoId を取得できませんでした。</div>
+          <small>動画の埋め込みはできませんが、URL登録は保存されています。</small>
+        </div>
+      `;
+
+      return `
+        ${renderNotice()}
+        <section class="panel detailLayout ${state.cookingMode ? "cooking-mode" : ""}">
+          <div class="detailHero">
+            <div class="detailTitleRow">
+              <div>
+                <h2 class="detailTitle">${esc(recipe.title)}</h2>
+                <div class="detailMeta">
+                  ${recipe.favorite ? `<span class="pill">★ お気に入り</span>` : `<span class="pill">☆ 通常</span>`}
+                  ${recipe.duration ? `<span class="pill">所要時間: ${esc(recipe.duration)}</span>` : `<span class="pill">所要時間: 未設定</span>`}
+                  <span class="pill">作った回数: ${Number(recipe.cookCount) || 0}</span>
+                  <span class="pill">最終調理日: ${recipe.lastCookedAt ? formatDate(recipe.lastCookedAt) : "未記録"}</span>
+                </div>
+              </div>
+              <div class="detailActions">
+                <button class="btn small" data-action="open-list" type="button">← 一覧へ</button>
+                <button class="btn small" data-action="toggle-cooking-mode" type="button">${state.cookingMode ? "料理中モード解除" : "料理中モード"}</button>
+                <button class="btn small" data-action="toggle-favorite" data-id="${esc(recipe.id)}" type="button">${recipe.favorite ? "お気に入り解除" : "お気に入り"}</button>
+                <button class="btn small secondary" data-action="mark-cooked" data-id="${esc(recipe.id)}" type="button">作った</button>
+                <button class="btn small" data-action="edit-recipe" data-id="${esc(recipe.id)}" type="button">編集</button>
+                <button class="btn small danger" data-action="delete-recipe" data-id="${esc(recipe.id)}" type="button">削除</button>
+              </div>
+            </div>
+
+            <div class="videoBox" id="videoAnchor">
+              ${videoSection}
+            </div>
+
+            <div class="detailFooter detailMeta">
+              <div class="badgeLine">
+                ${recipe.tags.length ? recipe.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("") : `<span class="muted">タグなし</span>`}
+              </div>
+              <div class="inlineActions">
+                <button class="btn small" data-action="open-youtube" data-id="${esc(recipe.id)}" type="button">YouTubeで開く</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="detailColumns">
+            <section class="section">
+              <h3>材料</h3>
+              <div class="ingredientList">
+                ${recipe.ingredients.length ? recipe.ingredients.map((item, index) => `
+                  <div class="ingredientItem">
+                    <input
+                      type="checkbox"
+                      aria-label="${esc(item.amount ? `${item.amount} ${item.name}` : item.name)}"
+                      data-ingredient-toggle="1"
+                      data-id="${esc(recipe.id)}"
+                      data-index="${index}"
+                      ${item.checked ? "checked" : ""}
+                    />
+                    <label>
+                      <strong>${esc(item.name)}</strong>
+                      ${item.amount ? `<span class="muted"> / ${esc(item.amount)}</span>` : ""}
+                    </label>
+                  </div>
+                `).join("") : `<div class="muted">材料は未登録です。</div>`}
+              </div>
+              <div class="inlineActions" style="margin-top:10px;">
+                <button class="btn small" data-action="clear-ingredients" data-id="${esc(recipe.id)}" type="button">チェックを全解除</button>
+              </div>
+            </section>
+
+            <section class="section">
+              <h3>手順</h3>
+              <div class="stepList">
+                ${recipe.steps.length ? recipe.steps.map((step, index) => {
+                  const sec = parseTimeToSeconds(step.time);
+                  const hasTime = sec > 0;
+                  return `
+                    <div class="stepItem">
+                      <div class="stepContent">
+                        <div class="stepText">${esc(step.text)}</div>
+                        ${step.time ? `<div class="tiny">タイムスタンプ: ${esc(step.time)}</div>` : `<div class="tiny">タイムスタンプなし</div>`}
+                      </div>
+                      ${hasTime ? `<button class="stepTimeBtn" data-action="seek-step" data-id="${esc(recipe.id)}" data-time="${esc(step.time)}" type="button">${esc(step.time)}</button>` : ""}
+                    </div>
+                  `;
+                }).join("") : `<div class="muted">手順は未登録です。</div>`}
+              </div>
+            </section>
+
+            <section class="section detailNotes">
+              <h3>メモ</h3>
+              <div class="muted" style="line-height:1.7; white-space:pre-wrap;">${recipe.notes ? esc(recipe.notes) : "メモはありません。"}</div>
+            </section>
+
+            <section class="section settingsHint">
+              <h3>使い方のヒント</h3>
+              <div class="muted" style="line-height:1.7;">
+                タイムスタンプを押すと、その秒数から見やすい形で動画を開けます。埋め込み再生が合わない場合は「YouTubeで開く」を使ってください。
+              </div>
+            </section>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderEditorView() {
+      const e = state.editor;
+      if (!e) {
+        return `
+          ${renderNotice()}
+          <section class="panel emptyState">
+            <h2>編集対象がありません</h2>
+            <button class="btn primary" data-action="open-list" type="button">一覧へ戻る</button>
+          </section>
+        `;
+      }
+
+      const previewVideoId = e.videoId || extractVideoId(e.youtubeUrl);
+      return `
+        ${renderNotice()}
+        <section class="panel editor">
+          <div class="detailTitleRow">
+            <div>
+              <h2 class="detailTitle">${e.id ? "レシピを編集" : "レシピを追加"}</h2>
+              <div class="muted">タイトルと YouTube URL は必須です。その他は空でも保存できます。</div>
+            </div>
+            <div class="formActions">
+              <button class="btn" data-action="cancel-editor" type="button">キャンセル</button>
+              <button class="btn primary" data-action="save-editor" type="button">保存</button>
+            </div>
+          </div>
+
+          <div class="editorGrid">
+            <div class="field full">
+              <label for="title">レシピ名 *</label>
+              <input id="title" data-editor-field="title" type="text" value="${esc(e.title)}" placeholder="例: 鶏むね肉の簡単焼き" />
+            </div>
+            <div class="field full">
+              <label for="youtubeUrl">YouTube URL *</label>
+              <input id="youtubeUrl" data-editor-field="youtubeUrl" type="url" value="${esc(e.youtubeUrl)}" placeholder="https://www.youtube.com/watch?v=..." />
+              <div class="tiny">watch / youtu.be / shorts / embed / live の URL を受け付けます。</div>
+            </div>
+            <div class="field">
+              <label for="tagsText">タグ</label>
+              <input id="tagsText" data-editor-field="tagsText" type="text" value="${esc(e.tagsText)}" placeholder="例: 節約, 時短, 鶏肉" />
+            </div>
+            <div class="field">
+              <label for="duration">所要時間</label>
+              <input id="duration" data-editor-field="duration" type="text" value="${esc(e.duration)}" placeholder="例: 15分" />
+            </div>
+            <div class="field full">
+              <label for="notes">メモ</label>
+              <textarea id="notes" data-editor-field="notes" rows="4" placeholder="料理のコツ、動画を見る位置、買い物の注意など">${esc(e.notes)}</textarea>
+            </div>
+            <div class="field full">
+              <label>
+                <input data-editor-field="favorite" type="checkbox" ${e.favorite ? "checked" : ""} />
+                お気に入りにする
+              </label>
+            </div>
+            <div class="field full">
+              <div class="previewBox">
+                <div class="tiny" style="font-weight:700;">YouTubeプレビュー</div>
+                <div id="editorPreview">
+                  ${previewVideoId ? `
+                    <div class="previewThumb">
+                      <img src="https://img.youtube.com/vi/${encodeURIComponent(previewVideoId)}/hqdefault.jpg" alt="YouTubeサムネイル" onerror="this.remove();" />
+                    </div>
+                    <div class="tiny">videoId: <strong>${esc(previewVideoId)}</strong></div>
+                  ` : `
+                    <div class="previewThumb">YouTube URL を入れるとプレビューが出ます</div>
+                    <div class="tiny">登録時に videoId を自動抽出して、埋め込み再生に使います。</div>
+                  `}
+                </div>
+              </div>
+            </div>
+
+            <div class="field full">
+              <label>材料</label>
+              <div class="nestedList">
+                ${e.ingredients.map((item, index) => `
+                  <div class="rowCard">
+                    <div class="rowHeader">
+                      <strong>材料 ${index + 1}</strong>
+                      <button class="btn small danger" data-action="remove-ingredient" data-index="${index}" type="button">削除</button>
+                    </div>
+                    <div class="rowGrid2">
+                      <div class="field">
+                        <label>材料名</label>
+                        <input data-ingredient-name data-index="${index}" type="text" value="${esc(item.name)}" placeholder="例: 鶏むね肉" />
+                      </div>
+                      <div class="field">
+                        <label>分量</label>
+                        <input data-ingredient-amount data-index="${index}" type="text" value="${esc(item.amount)}" placeholder="例: 1枚" />
+                      </div>
+                    </div>
+                  </div>
+                `).join("")}
+                <button class="btn" data-action="add-ingredient" type="button">＋ 材料を追加</button>
+              </div>
+            </div>
+
+            <div class="field full">
+              <label>手順</label>
+              <div class="nestedList">
+                ${e.steps.map((step, index) => `
+                  <div class="rowCard">
+                    <div class="rowHeader">
+                      <strong>手順 ${index + 1}</strong>
+                      <button class="btn small danger" data-action="remove-step" data-index="${index}" type="button">削除</button>
+                    </div>
+                    <div class="rowGrid3">
+                      <div class="field">
+                        <label>説明</label>
+                        <input data-step-text data-index="${index}" type="text" value="${esc(step.text)}" placeholder="例: 肉に塩をふる" />
+                      </div>
+                      <div class="field">
+                        <label>タイムスタンプ</label>
+                        <input data-step-time data-index="${index}" type="text" value="${esc(step.time)}" placeholder="例: 01:20" />
+                      </div>
+                      <div class="field">
+                        <label>&nbsp;</label>
+                        <div class="tiny">mm:ss / hh:mm:ss / 秒数</div>
+                      </div>
+                    </div>
+                  </div>
+                `).join("")}
+                <button class="btn" data-action="add-step" type="button">＋ 手順を追加</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderSettingsView() {
+      const count = state.recipes.length;
+      return `
+        ${renderNotice()}
+        <section class="panel settings">
+          <div class="detailTitleRow">
+            <div>
+              <h2 class="detailTitle">設定 / 管理</h2>
+              <div class="muted">データはブラウザ内に保存されます。JSONでバックアップもできます。</div>
+            </div>
+            <div class="formActions">
+              <button class="btn" data-action="open-list" type="button">一覧へ戻る</button>
+            </div>
+          </div>
+
+          <div class="settingsGrid">
+            <section class="section countBox">
+              <h3>保存件数</h3>
+              <div class="pill">${count}件のレシピを保存中</div>
+              <div class="tiny">localStorage に保存しています。ページを開き直しても復元されます。</div>
+            </section>
+
+            <section class="section">
+              <h3>JSONエクスポート</h3>
+              <div class="settingsActions">
+                <button class="btn primary" data-action="export-json" type="button">JSONを書き出す</button>
+              </div>
+              <div class="tiny settingsHint">バックアップ用にダウンロードできます。</div>
+            </section>
+
+            <section class="section full">
+              <h3>JSONインポート</h3>
+              <div class="field">
+                <label for="importFile">JSONファイルを読み込む</label>
+                <input id="importFile" data-field="importFile" type="file" accept=".json,application/json" />
+              </div>
+              <div class="field" style="margin-top:10px;">
+                <label for="importText">JSONを貼り付ける</label>
+                <textarea id="importText" class="settingsTextArea" placeholder='[{"title":"...","youtubeUrl":"..."}]' oninput="window.__recipeStock && window.__recipeStock.setImportText(this.value)"></textarea>
+              </div>
+              <div class="field" style="margin-top:10px;">
+                <label>取り込み方法</label>
+                <div class="inlineActions">
+                  <label><input type="radio" name="importMode" data-field="importMode" value="replace" ${state.importMode === "replace" ? "checked" : ""} /> 置換</label>
+                  <label><input type="radio" name="importMode" data-field="importMode" value="append" ${state.importMode === "append" ? "checked" : ""} /> 追加</label>
+                </div>
+              </div>
+              <div class="inlineActions" style="margin-top:10px;">
+                <button class="btn secondary" data-action="import-text" type="button">貼り付けJSONを取り込む</button>
+              </div>
+            </section>
+
+            <section class="section full">
+              <h3>危険操作</h3>
+              <div class="inlineActions">
+                <button class="btn danger" data-action="clear-all" type="button">全データ削除</button>
+              </div>
+              <div class="tiny settingsHint">削除前に確認ダイアログを出します。</div>
+            </section>
+          </div>
+        </section>
+      `;
+    }
+
+    function render() {
+      document.body.classList.toggle("cooking-mode", state.view === "detail" && state.cookingMode);
+
+      const active = document.activeElement;
+      const activeId = active && active.id ? active.id : null;
+      const activeSelection = active && typeof active.selectionStart === "number" && typeof active.selectionEnd === "number"
+        ? { start: active.selectionStart, end: active.selectionEnd }
+        : null;
+
+      let body = renderHeader();
+      if (state.view === "list") body += renderListView();
+      if (state.view === "detail") body += renderDetailView(getRecipeById(state.selectedId));
+      if (state.view === "edit") body += renderEditorView();
+      if (state.view === "settings") body += renderSettingsView();
+      app.innerHTML = body;
+
+      const importText = document.getElementById("importText");
+      if (importText) importText.value = state.importText || "";
+
+      if (activeId) {
+        const next = document.getElementById(activeId);
+        if (next && typeof next.focus === "function") {
+          next.focus({ preventScroll: true });
+          if (activeSelection && typeof next.setSelectionRange === "function" && "value" in next) {
+            const len = String(next.value || "").length;
+            next.setSelectionRange(Math.min(activeSelection.start, len), Math.min(activeSelection.end, len));
+          }
+        }
+      }
+
+      if (state.view === "edit") refreshEditorPreview();
+    }
+
+    window.__recipeStock = {
+      setImportText(value) {
+        state.importText = value;
+      }
+    };
+
+    app.addEventListener("click", onAppClick);
+    app.addEventListener("input", onAppInput);
+    app.addEventListener("change", onAppChange);
+
+    loadRecipes();
+    render();
+  })();
+  </script>
+</body>
+</html>
